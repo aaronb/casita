@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb x11vnc novnc websockify \
     fonts-liberation fonts-noto-color-emoji \
     dbus dbus-x11 \
+    supervisor \
     curl git sudo procps xdg-utils ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -56,6 +57,7 @@ EOF
 
 EXPOSE 6080
 
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["tini", "--", "entrypoint.sh"]
