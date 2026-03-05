@@ -6,8 +6,9 @@ ENV RESOLUTION=1280x1024x24
 ENV VNC_PORT=5900
 ENV NOVNC_PORT=6080
 
-# System dependencies: display pipeline, utilities, fonts
+# System dependencies: display pipeline, utilities, fonts, init
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini \
     xvfb x11vnc novnc websockify \
     fonts-liberation fonts-noto-color-emoji \
     dbus dbus-x11 \
@@ -39,6 +40,7 @@ RUN PLAYWRIGHT_CLI=$(find ~/.npm/_npx -path "*/playwright/cli.js" | head -1) && 
 # MCP configuration — user-scope Playwright MCP server (stored in ~/.claude.json)
 # "--no-sandbox disables Chromium's security sandbox, required when running inside Docker where namespace/setuid sandboxing is unavailable",
 RUN cat > /home/claude/.claude.json << 'EOF'
+{
   "mcpServers": {
     "playwright": {
       "type": "stdio",
@@ -56,5 +58,5 @@ EXPOSE 6080
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["tini", "--", "entrypoint.sh"]
 CMD ["bash"]
