@@ -11,6 +11,10 @@ cleanup() {
 }
 trap cleanup SIGTERM SIGINT
 
+# Log directory for background services
+LOG_DIR="/tmp/sandbox-logs"
+mkdir -p "$LOG_DIR"
+
 # 1. D-Bus daemon (Chromium needs it)
 if [ -f /run/dbus/pid ]; then
     rm -f /run/dbus/pid
@@ -19,15 +23,15 @@ sudo dbus-daemon --system --fork 2>/dev/null || true
 
 # 2. Xvfb virtual framebuffer
 sudo mkdir -p /tmp/.X11-unix && sudo chmod 1777 /tmp/.X11-unix
-Xvfb $DISPLAY -screen 0 $RESOLUTION -ac +extension GLX +render -noreset &
+Xvfb $DISPLAY -screen 0 $RESOLUTION -ac +extension GLX +render -noreset > "$LOG_DIR/xvfb.log" 2>&1 &
 sleep 1
 
 # 3. x11vnc — VNC server attached to the virtual display
-x11vnc -display $DISPLAY -forever -shared -nopw -rfbport $VNC_PORT -q &
+x11vnc -display $DISPLAY -forever -shared -nopw -rfbport $VNC_PORT -q > "$LOG_DIR/x11vnc.log" 2>&1 &
 sleep 0.5
 
 # 4. noVNC via websockify — web frontend proxying to VNC
-websockify --web /usr/share/novnc $NOVNC_PORT localhost:$VNC_PORT &
+websockify --web /usr/share/novnc $NOVNC_PORT localhost:$VNC_PORT > "$LOG_DIR/websockify.log" 2>&1 &
 sleep 0.5
 
 echo "============================================"
