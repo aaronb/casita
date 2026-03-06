@@ -3,6 +3,13 @@ set -e
 
 export PATH="$HOME/.local/bin:$PATH"
 
+# Seed home directory from skeleton on first run (no-clobber is safe to re-run)
+if [ ! -f "$HOME/.initialized" ]; then
+    echo "Seeding home directory from skeleton..."
+    cp -a --no-clobber /etc/skel-claude/. "$HOME/"
+    touch "$HOME/.initialized"
+fi
+
 # Clean shutdown
 cleanup() {
     echo "Shutting down services..."

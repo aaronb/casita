@@ -55,10 +55,15 @@ RUN cat > /home/claude/.claude.json << 'EOF'
 }
 EOF
 
+# Save build-time home contents to skeleton dir for first-run seeding
+RUN sudo mkdir -p /etc/skel-claude && sudo cp -a /home/claude/. /etc/skel-claude/
+
 EXPOSE 6080
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
+WORKDIR /workspace
+
 ENTRYPOINT ["tini", "--", "entrypoint.sh"]
-CMD ["bash"]
+CMD ["claude"]
