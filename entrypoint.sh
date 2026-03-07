@@ -12,12 +12,22 @@ fi
 
 # Clean shutdown
 cleanup() {
+    # Sync credentials back to shared location
+    if [ -f "$LOCAL_CREDS" ] && [ -d "$HOME/.claude-shared" ]; then
+        cp "$LOCAL_CREDS" "$SHARED_CREDS" 2>/dev/null || true
+    fi
     echo "Shutting down services..."
     supervisorctl -c /etc/supervisor/conf.d/supervisord.conf shutdown 2>/dev/null || true
     kill $(jobs -p) 2>/dev/null
     exit 0
 }
-trap cleanup SIGTERM SIGINT
+
+# Shared Claude credentials: copy in before start, sync back on exit.
+# The shared config dir is mounted at ~/.claude-shared by the CLI.
+SHARED_CREDS="$HOME/.claude-shared/.credentials.json"
+LOCAL_CREDS="$HOME/.claude/.credentials.json"
+
+trap cleanup SIGTERM SIGINT EXIT
 
 # Log directory for background services
 mkdir -p /tmp/sandbox-logs
@@ -36,5 +46,32 @@ echo "============================================"
 # Start background services via supervisord (daemonized)
 supervisord -c /etc/supervisor/conf.d/supervisord.conf
 
+# Seed local credentials from shared if this sandbox doesn't have its own
+if [ -d "$HOME/.claude-shared" ]; then
+    mkdir -p "$HOME/.claude"
+    if [ ! -f "$LOCAL_CREDS" ] && [ -s "$SHARED_CREDS" ]; then
+        cp "$SHARED_CREDS" "$LOCAL_CREDS"
+        echo "Loaded shared Claude credentials."
+    fi
+    # Ensure settings.json exists so Claude Code doesn't show first-run onboarding
+    if [ ! -f "$HOME/.claude/settings.json" ]; then
+        echo '{}' > "$HOME/.claude/settings.json"
+    fi
+    # Mark onboarding as complete so Claude Code skips the first-run flow
+    if [ -s "$SHARED_CREDS" ] && [ -f "$HOME/.claude.json" ]; then
+        if ! grep -q '"hasCompletedOnboarding"' "$HOME/.claude.json"; then
+            python3 -c "
+import json, sys
+with open(sys.argv[1], 'r') as f:
+    d = json.load(f)
+d['hasCompletedOnboarding'] = True
+d['numStartups'] = d.get('numStartups', 0) + 1
+with open(sys.argv[1], 'w') as f:
+    json.dump(d, f, indent=2)
+" "$HOME/.claude.json"
+        fi
+    fi
+fi
+
 # Run the provided command (defaults to bash via CMD)
-exec "$@"
+"$@"
