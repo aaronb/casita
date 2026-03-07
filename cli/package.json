@@ -1,0 +1,23 @@
+{
+  "name": "agent-sandbox",
+  "version": "0.1.0",
+  "description": "CLI for managing AI agent sandbox containers",
+  "type": "module",
+  "bin": {
+    "sandbox": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "execa": "^9.5.2",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0"
+  }
+}

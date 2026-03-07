@@ -14,6 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dbus dbus-x11 \
     supervisor \
     curl git sudo procps xdg-utils ca-certificates \
+    # Python & common PDF tools
+    python3 python3-pip python3-venv \
+    poppler-utils ghostscript qpdf \
+    libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Node.js 22.x LTS via NodeSource
@@ -27,6 +31,11 @@ RUN useradd -m -s /bin/bash claude \
 
 USER claude
 WORKDIR /home/claude
+
+# Python PDF libraries (installed globally via pipx-style break-system-packages)
+RUN pip3 install --break-system-packages \
+    pypdf pymupdf pdfplumber reportlab fpdf2 pikepdf camelot-py[cv] tabula-py \
+    openpyxl xlsxwriter python-calamine xlrd odfpy pandas
 
 # Claude Code CLI
 RUN curl -fsSL https://claude.ai/install.sh | bash
