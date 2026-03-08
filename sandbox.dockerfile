@@ -6,18 +6,28 @@ ENV RESOLUTION=1280x1024x24
 ENV VNC_PORT=5900
 ENV NOVNC_PORT=6080
 
-# System dependencies: display pipeline, utilities, fonts, init
+# System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Process init — lightweight PID 1 for proper signal handling
     tini \
+    # Virtual display & VNC — headless X server with browser-accessible remote desktop
     xvfb x11vnc novnc websockify \
+    # Fonts — ensure readable text rendering in browser and document tools
     fonts-liberation fonts-noto-color-emoji \
+    # D-Bus — inter-process messaging required by Chromium and desktop services
     dbus dbus-x11 \
+    # Process manager — runs Xvfb, VNC, and other background services
     supervisor \
+    # Core utilities — networking, version control, privilege escalation, process inspection
     curl git sudo procps xdg-utils ca-certificates \
-    # Python & common PDF tools
+    # Python runtime
     python3 python3-pip python3-venv \
+    # PDF tools — CLI utilities for splitting, merging, converting, and inspecting PDFs
     poppler-utils ghostscript qpdf \
+    # Cairo/Pango rendering libs — used by Python PDF and graphics libraries
     libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 \
+    # Image tools — convert/magick (ImageMagick), heif-convert (HEIC→JPEG/PNG), cwebp/dwebp
+    imagemagick libheif-examples webp \
     && rm -rf /var/lib/apt/lists/*
 
 # Node.js 22.x LTS via NodeSource
