@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import readline from "node:readline";
-import { findSandboxByName, removeSandbox } from "../docker.js";
+import { findSandboxByName, removeSandbox, getWorkspaceRoot, getSandboxesDir } from "../docker.js";
 
 interface RmOptions {
   force?: boolean;
@@ -27,11 +27,11 @@ export async function rmCommand(name: string, options: RmOptions) {
   console.log(`Removed sandbox "${name}".`);
 
   if (options.clean) {
-    const projectRoot = path.resolve(import.meta.dirname, "../..");
-    const homeDir = path.resolve(projectRoot, "..", ".sandboxes", name);
-    if (fs.existsSync(homeDir)) {
-      fs.rmSync(homeDir, { recursive: true, force: true });
-      console.log(`Cleaned home directory: ${homeDir}`);
+    const workspaceRoot = getWorkspaceRoot();
+    const sandboxDir = path.join(getSandboxesDir(workspaceRoot), name);
+    if (fs.existsSync(sandboxDir)) {
+      fs.rmSync(sandboxDir, { recursive: true, force: true });
+      console.log(`Cleaned sandbox data: ${sandboxDir}`);
     }
   }
 }

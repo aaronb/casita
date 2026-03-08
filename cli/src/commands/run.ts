@@ -7,7 +7,9 @@ import {
   CONTAINER_PREFIX,
   LABEL_PREFIX,
   findSandboxByName,
-  findSandboxByWorkspace,
+  findSandboxForWorkspace,
+  getWorkspaceRoot,
+  getSandboxesDir,
 } from "../docker.js";
 
 interface RunOptions {
@@ -23,10 +25,12 @@ function getSharedConfigDir(): string {
 }
 
 export async function runCommand(name: string | undefined, claudeArgs: string[], options: RunOptions) {
+  const workspaceRoot = getWorkspaceRoot();
+
   // Look up existing sandbox
   const existing = name
     ? await findSandboxByName(name)
-    : await findSandboxByWorkspace(process.cwd());
+    : await findSandboxForWorkspace(workspaceRoot);
 
   if (existing) {
     if (existing.state === "running") {
@@ -63,17 +67,16 @@ export async function runCommand(name: string | undefined, claudeArgs: string[],
   const containerName = `${CONTAINER_PREFIX}-${sandboxName}`;
   const image = options.image || "agent-sandbox";
 
-  const projectRoot = path.resolve(import.meta.dirname, "../..");
-  const sandboxesDir = path.resolve(projectRoot, "..", ".sandboxes");
+  const sandboxesDir = getSandboxesDir(workspaceRoot);
   const homeDir = path.resolve(sandboxesDir, sandboxName, "home");
   fs.mkdirSync(path.join(homeDir, ".claude"), { recursive: true });
 
   const sharedConfigDir = getSharedConfigDir();
 
-  const workspace = process.cwd();
   const portMapping = options.port ? `${options.port}:6080` : "6080";
 
   console.log(`Sandbox: ${sandboxName} (new)`);
+  console.log(`Workspace: ${workspaceRoot}`);
   console.log(`Use "sandbox browser ${sandboxName}" to open noVNC`);
   console.log();
 
@@ -84,9 +87,8 @@ export async function runCommand(name: string | undefined, claudeArgs: string[],
     "-p", portMapping,
     "-v", `${homeDir}:/home/claude`,
     "-v", `${sharedConfigDir}:/home/claude/.claude-shared`,
-    "-v", `${workspace}:/workspace`,
+    "-v", `${workspaceRoot}:/workspace`,
     "--label", `${LABEL_PREFIX}.name=${sandboxName}`,
-    "--label", `${LABEL_PREFIX}.workspace=${workspace}`,
     image,
     ...claudeArgs,
   ];
