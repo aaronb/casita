@@ -3,6 +3,7 @@ import { Command } from "commander";
 import { runCommand } from "./commands/run.js";
 import { listCommand } from "./commands/list.js";
 import { browserCommand } from "./commands/browser.js";
+import { rmCommand } from "./commands/rm.js";
 
 const program = new Command();
 
@@ -13,7 +14,7 @@ program
 
 program
   .command("run")
-  .description("Start a sandbox container")
+  .description("Start or resume a sandbox")
   .argument("[name]", "Sandbox name (auto-generated if omitted)")
   .option("-p, --port <port>", "Host port for noVNC (Docker auto-assigns if omitted)")
   .option("-i, --image <image>", "Docker image name", "agent-sandbox")
@@ -26,7 +27,8 @@ program
 
 program
   .command("list")
-  .description("List running sandboxes")
+  .description("List sandboxes")
+  .option("--running", "Show only running sandboxes")
   .action(listCommand);
 
 program
@@ -34,5 +36,13 @@ program
   .description("Open noVNC in default browser")
   .argument("[name]", "Sandbox name (inferred if only one running)")
   .action(browserCommand);
+
+program
+  .command("rm")
+  .description("Remove a sandbox")
+  .argument("<name>", "Sandbox name to remove")
+  .option("-f, --force", "Skip confirmation prompt")
+  .option("--clean", "Also delete the home directory on disk")
+  .action(rmCommand);
 
 program.parse();

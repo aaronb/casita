@@ -1,10 +1,18 @@
 import { listSandboxes } from "../docker.js";
 
-export async function listCommand() {
-  const sandboxes = await listSandboxes();
+interface ListOptions {
+  running?: boolean;
+}
+
+export async function listCommand(options: ListOptions) {
+  let sandboxes = await listSandboxes();
+
+  if (options.running) {
+    sandboxes = sandboxes.filter((s) => s.state === "running");
+  }
 
   if (sandboxes.length === 0) {
-    console.log("No running sandboxes.");
+    console.log("No sandboxes found.");
     return;
   }
 

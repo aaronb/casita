@@ -9,6 +9,7 @@ export interface SandboxInfo {
   port: string;
   workspace: string;
   status: string;
+  state: "running" | "exited";
 }
 
 export async function getHostPort(container: string, containerPort: number): Promise<string> {
@@ -22,7 +23,7 @@ export async function getHostPort(container: string, containerPort: number): Pro
 
 export async function listSandboxes(): Promise<SandboxInfo[]> {
   const { stdout } = await execa("docker", [
-    "ps",
+    "ps", "-a",
     "--filter", `label=${LABEL_PREFIX}.name`,
     "--format", "{{json .}}",
   ]);
@@ -33,19 +34,37 @@ export async function listSandboxes(): Promise<SandboxInfo[]> {
     stdout.trim().split("\n").map(async (line) => {
       const container = JSON.parse(line);
       const labels = await getContainerLabels(container.ID);
-      let port = "unknown";
-      try {
-        port = await getHostPort(container.ID, 6080);
-      } catch {}
+      const isRunning = (container.State || "").toLowerCase() === "running";
+      let port = "--";
+      if (isRunning) {
+        try {
+          port = await getHostPort(container.ID, 6080);
+        } catch {}
+      }
       return {
         name: labels[`${LABEL_PREFIX}.name`] || "unknown",
         containerId: container.ID,
         port,
         workspace: labels[`${LABEL_PREFIX}.workspace`] || "unknown",
         status: container.Status || container.State || "unknown",
+        state: isRunning ? "running" as const : "exited" as const,
       };
     })
   );
+}
+
+export async function findSandboxByWorkspace(workspace: string): Promise<SandboxInfo | null> {
+  const sandboxes = await listSandboxes();
+  return sandboxes.find((s) => s.workspace === workspace) || null;
+}
+
+export async function findSandboxByName(name: string): Promise<SandboxInfo | null> {
+  const sandboxes = await listSandboxes();
+  return sandboxes.find((s) => s.name === name) || null;
+}
+
+export async function removeSandbox(containerId: string): Promise<void> {
+  await execa("docker", ["rm", "-f", containerId]);
 }
 
 async function getContainerLabels(containerId: string): Promise<Record<string, string>> {

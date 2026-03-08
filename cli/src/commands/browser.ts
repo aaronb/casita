@@ -2,7 +2,7 @@ import open from "open";
 import { listSandboxes } from "../docker.js";
 
 export async function browserCommand(name: string | undefined) {
-  const sandboxes = await listSandboxes();
+  const sandboxes = (await listSandboxes()).filter((s) => s.state === "running");
 
   if (sandboxes.length === 0) {
     console.error("No running sandboxes.");

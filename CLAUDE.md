@@ -1,8 +1,16 @@
 
-create and test a dockerfile that builds an image for ai agent sandbox:                 
-  - install claude code in the sandbox                                                    
-  - support running playwright mcp inside the sandbox                                     
-  - sandbox should run and expose a web server that shows a live view of the browser window inside the sandbox, and allow interaction with it through the web interface
+An AI agent sandbox for Claude Code.
+
+Run the Claude Code agent in a docker container, allowing it to run any local operation in the container. The agent can install tools as needed.
+
+The container is pre-loaded with tools an agent would commonly use:
+- common dev tools
+- python and node runtimes
+- chromium browser with playwright mcp
+
+## Workspace
+
+Similar to git or Claude code itself, the sandbox is tied to a workspace -- a directory on the host machine. The workspace is mounted into the container at `/workspace`. 
 
 # Notes
 
