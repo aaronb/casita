@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-IMAGE_NAME="${IMAGE_NAME:-agent-sandbox}"
+IMAGE_NAME="${IMAGE_NAME:-casita}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 usage() {
@@ -14,12 +14,12 @@ usage() {
   echo "  install   Build CLI and install it locally (npm link)"
   echo ""
   echo "Environment:"
-  echo "  IMAGE_NAME   Docker image name (default: agent-sandbox)"
+  echo "  IMAGE_NAME   Docker image name (default: casita)"
 }
 
 build_image() {
   echo "==> Building Docker image: $IMAGE_NAME"
-  docker build -f "$SCRIPT_DIR/sandbox.dockerfile" -t "$IMAGE_NAME" "$SCRIPT_DIR"
+  docker build -f "$SCRIPT_DIR/casita.dockerfile" -t "$IMAGE_NAME" "$SCRIPT_DIR"
   echo "==> Image built: $IMAGE_NAME"
 }
 
@@ -36,7 +36,7 @@ install_cli() {
   echo "==> Installing CLI globally (npm link)"
   cd "$SCRIPT_DIR/cli"
   npm link
-  echo "==> Installed: $(which sandbox)"
+  echo "==> Installed: $(which casita)"
 }
 
 cmd="${1:-all}"

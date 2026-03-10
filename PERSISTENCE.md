@@ -1,4 +1,4 @@
-# Persistence Options for Agent Sandbox
+# Persistence Options for Casita
 
 ## Options
 
@@ -10,7 +10,7 @@ Mount Docker volumes to key directories (`/home/user`, `/var/lib/apt`, etc.).
 ### 2. `docker commit` Snapshots
 Snapshot the container as a new image after a session.
 ```bash
-docker commit sandbox-container sandbox-image:session-3
+docker commit casita-container casita-image:session-3
 ```
 - Captures everything — installed packages, system config, all files
 - Images grow over time
@@ -31,16 +31,16 @@ Combine stop/start for daily use, named volume for `/home/user`, and `docker com
 
 ```bash
 # Normal session
-docker start agent-sandbox
+docker start casita
 
 # Checkpoint
-docker commit agent-sandbox sandbox:checkpoint-1
+docker commit casita casita:checkpoint-1
 
 # Reset to clean
-docker rm agent-sandbox
-docker run --name agent-sandbox -v workspace:/home/user sandbox:latest
+docker rm casita
+docker run --name casita -v workspace:/home/user casita:latest
 
 # Reset to checkpoint
-docker rm agent-sandbox
-docker run --name agent-sandbox -v workspace:/home/user sandbox:checkpoint-1
+docker rm casita
+docker run --name casita -v workspace:/home/user casita:checkpoint-1
 ```

@@ -6,10 +6,10 @@ import { generateName } from "../names.js";
 import {
   CONTAINER_PREFIX,
   LABEL_PREFIX,
-  findSandboxByName,
-  findSandboxForWorkspace,
+  findCasitaByName,
+  findCasitaForWorkspace,
   getWorkspaceRoot,
-  getSandboxesDir,
+  getCasitasDir,
 } from "../docker.js";
 
 interface RunOptions {
@@ -17,9 +17,9 @@ interface RunOptions {
   image?: string;
 }
 
-// Shared config directory in user's home, mounted into all sandboxes.
+// Shared config directory in user's home, mounted into all casitas.
 function getSharedConfigDir(): string {
-  const dir = path.join(os.homedir(), ".claude-sandbox");
+  const dir = path.join(os.homedir(), ".casita");
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -27,14 +27,14 @@ function getSharedConfigDir(): string {
 export async function runCommand(name: string | undefined, claudeArgs: string[], options: RunOptions) {
   const workspaceRoot = getWorkspaceRoot();
 
-  // Look up existing sandbox
+  // Look up existing casita
   const existing = name
-    ? await findSandboxByName(name)
-    : await findSandboxForWorkspace(workspaceRoot);
+    ? await findCasitaByName(name)
+    : await findCasitaForWorkspace(workspaceRoot);
 
   if (existing) {
     if (existing.state === "running") {
-      console.log(`Sandbox: ${existing.name} (running, attaching shell)`);
+      console.log(`Casita: ${existing.name} (running, attaching shell)`);
       console.log();
       await execa("docker", ["exec", "-it", `${CONTAINER_PREFIX}-${existing.name}`, "bash"], {
         stdio: "inherit",
@@ -43,8 +43,8 @@ export async function runCommand(name: string | undefined, claudeArgs: string[],
     }
 
     // Stopped — restart
-    console.log(`Sandbox: ${existing.name} (resuming)`);
-    console.log(`Use "sandbox browser ${existing.name}" to open noVNC`);
+    console.log(`Casita: ${existing.name} (resuming)`);
+    console.log(`Use "casita browser ${existing.name}" to open noVNC`);
     console.log();
     try {
       await execa("docker", ["start", "-ai", `${CONTAINER_PREFIX}-${existing.name}`], {
@@ -52,9 +52,9 @@ export async function runCommand(name: string | undefined, claudeArgs: string[],
       });
     } catch (err: any) {
       if (err.stderr && /port.*already|address already in use/i.test(err.stderr)) {
-        console.error(`\nError: Port conflict when restarting sandbox. Remove and recreate it:`);
-        console.error(`  sandbox rm ${existing.name}`);
-        console.error(`  sandbox run`);
+        console.error(`\nError: Port conflict when restarting casita. Remove and recreate it:`);
+        console.error(`  casita rm ${existing.name}`);
+        console.error(`  casita run`);
         process.exit(1);
       }
       throw err;
@@ -62,22 +62,22 @@ export async function runCommand(name: string | undefined, claudeArgs: string[],
     return;
   }
 
-  // Create new sandbox
-  const sandboxName = name || await generateUniqueName();
-  const containerName = `${CONTAINER_PREFIX}-${sandboxName}`;
-  const image = options.image || "agent-sandbox";
+  // Create new casita
+  const casitaName = name || await generateUniqueName();
+  const containerName = `${CONTAINER_PREFIX}-${casitaName}`;
+  const image = options.image || "casita";
 
-  const sandboxesDir = getSandboxesDir(workspaceRoot);
-  const homeDir = path.resolve(sandboxesDir, sandboxName, "home");
+  const casitasDir = getCasitasDir(workspaceRoot);
+  const homeDir = path.resolve(casitasDir, casitaName, "home");
   fs.mkdirSync(path.join(homeDir, ".claude"), { recursive: true });
 
   const sharedConfigDir = getSharedConfigDir();
 
   const portMapping = options.port ? `${options.port}:6080` : "6080";
 
-  console.log(`Sandbox: ${sandboxName} (new)`);
+  console.log(`Casita: ${casitaName} (new)`);
   console.log(`Workspace: ${workspaceRoot}`);
-  console.log(`Use "sandbox browser ${sandboxName}" to open noVNC`);
+  console.log(`Use "casita browser ${casitaName}" to open noVNC`);
   console.log();
 
   const args = [
@@ -86,9 +86,9 @@ export async function runCommand(name: string | undefined, claudeArgs: string[],
     "--shm-size=2g",
     "-p", portMapping,
     "-v", `${homeDir}:/home/claude`,
-    "-v", `${sharedConfigDir}:/home/claude/.claude-shared`,
+    "-v", `${sharedConfigDir}:/home/claude/.casita-shared`,
     "-v", `${workspaceRoot}:/workspace`,
-    "--label", `${LABEL_PREFIX}.name=${sandboxName}`,
+    "--label", `${LABEL_PREFIX}.name=${casitaName}`,
     image,
     ...claudeArgs,
   ];
@@ -99,7 +99,7 @@ export async function runCommand(name: string | undefined, claudeArgs: string[],
 async function generateUniqueName(): Promise<string> {
   for (let i = 0; i < 10; i++) {
     const candidate = generateName();
-    const existing = await findSandboxByName(candidate);
+    const existing = await findCasitaByName(candidate);
     if (!existing) return candidate;
   }
   // Fallback: use timestamp suffix

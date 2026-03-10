@@ -13,7 +13,7 @@ fi
 # Clean shutdown
 cleanup() {
     # Sync credentials back to shared location
-    if [ -f "$LOCAL_CREDS" ] && [ -d "$HOME/.claude-shared" ]; then
+    if [ -f "$LOCAL_CREDS" ] && [ -d "$HOME/.casita-shared" ]; then
         cp "$LOCAL_CREDS" "$SHARED_CREDS" 2>/dev/null || true
     fi
     echo "Shutting down services..."
@@ -23,14 +23,14 @@ cleanup() {
 }
 
 # Shared Claude credentials: copy in before start, sync back on exit.
-# The shared config dir is mounted at ~/.claude-shared by the CLI.
-SHARED_CREDS="$HOME/.claude-shared/.credentials.json"
+# The shared config dir is mounted at ~/.casita-shared by the CLI.
+SHARED_CREDS="$HOME/.casita-shared/.credentials.json"
 LOCAL_CREDS="$HOME/.claude/.credentials.json"
 
 trap cleanup SIGTERM SIGINT EXIT
 
 # Log directory for background services
-mkdir -p /tmp/sandbox-logs
+mkdir -p /tmp/casita-logs
 
 # D-Bus daemon (Chromium needs it)
 if [ -f /run/dbus/pid ]; then
@@ -46,8 +46,8 @@ echo "============================================"
 # Start background services via supervisord (daemonized)
 supervisord -c /etc/supervisor/conf.d/supervisord.conf
 
-# Seed local credentials from shared if this sandbox doesn't have its own
-if [ -d "$HOME/.claude-shared" ]; then
+# Seed local credentials from shared if this casita doesn't have its own
+if [ -d "$HOME/.casita-shared" ]; then
     mkdir -p "$HOME/.claude"
     if [ ! -f "$LOCAL_CREDS" ] && [ -s "$SHARED_CREDS" ]; then
         cp "$SHARED_CREDS" "$LOCAL_CREDS"

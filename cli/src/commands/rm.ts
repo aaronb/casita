@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import readline from "node:readline";
-import { findSandboxByName, removeSandbox, getWorkspaceRoot, getSandboxesDir } from "../docker.js";
+import { findCasitaByName, removeCasita, getWorkspaceRoot, getCasitasDir } from "../docker.js";
 
 interface RmOptions {
   force?: boolean;
@@ -9,29 +9,29 @@ interface RmOptions {
 }
 
 export async function rmCommand(name: string, options: RmOptions) {
-  const sandbox = await findSandboxByName(name);
-  if (!sandbox) {
-    console.error(`Sandbox "${name}" not found.`);
+  const casita = await findCasitaByName(name);
+  if (!casita) {
+    console.error(`Casita "${name}" not found.`);
     process.exit(1);
   }
 
   if (!options.force) {
-    const confirmed = await confirm(`Remove sandbox "${name}"? Container will be deleted.`);
+    const confirmed = await confirm(`Remove casita "${name}"? Container will be deleted.`);
     if (!confirmed) {
       console.log("Aborted.");
       return;
     }
   }
 
-  await removeSandbox(sandbox.containerId);
-  console.log(`Removed sandbox "${name}".`);
+  await removeCasita(casita.containerId);
+  console.log(`Removed casita "${name}".`);
 
   if (options.clean) {
     const workspaceRoot = getWorkspaceRoot();
-    const sandboxDir = path.join(getSandboxesDir(workspaceRoot), name);
-    if (fs.existsSync(sandboxDir)) {
-      fs.rmSync(sandboxDir, { recursive: true, force: true });
-      console.log(`Cleaned sandbox data: ${sandboxDir}`);
+    const casitaDir = path.join(getCasitasDir(workspaceRoot), name);
+    if (fs.existsSync(casitaDir)) {
+      fs.rmSync(casitaDir, { recursive: true, force: true });
+      console.log(`Cleaned casita data: ${casitaDir}`);
     }
   }
 }

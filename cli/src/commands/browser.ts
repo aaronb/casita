@@ -1,29 +1,29 @@
 import open from "open";
-import { listSandboxes } from "../docker.js";
+import { listCasitas } from "../docker.js";
 
 export async function browserCommand(name: string | undefined) {
-  const sandboxes = (await listSandboxes()).filter((s) => s.state === "running");
+  const casitas = (await listCasitas()).filter((s) => s.state === "running");
 
-  if (sandboxes.length === 0) {
-    console.error("No running sandboxes.");
+  if (casitas.length === 0) {
+    console.error("No running casitas.");
     process.exit(1);
   }
 
-  let sandbox;
+  let casita;
   if (name) {
-    sandbox = sandboxes.find((s) => s.name === name);
-    if (!sandbox) {
-      console.error(`Sandbox "${name}" not found. Running sandboxes: ${sandboxes.map((s) => s.name).join(", ")}`);
+    casita = casitas.find((s) => s.name === name);
+    if (!casita) {
+      console.error(`Casita "${name}" not found. Running casitas: ${casitas.map((s) => s.name).join(", ")}`);
       process.exit(1);
     }
-  } else if (sandboxes.length === 1) {
-    sandbox = sandboxes[0];
+  } else if (casitas.length === 1) {
+    casita = casitas[0];
   } else {
-    console.error(`Multiple sandboxes running. Specify a name: ${sandboxes.map((s) => s.name).join(", ")}`);
+    console.error(`Multiple casitas running. Specify a name: ${casitas.map((s) => s.name).join(", ")}`);
     process.exit(1);
   }
 
-  const url = `http://localhost:${sandbox.port}/vnc.html`;
+  const url = `http://localhost:${casita.port}/vnc.html`;
   console.log(`Opening ${url}`);
   await open(url);
 }

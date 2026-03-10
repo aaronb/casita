@@ -8,16 +8,16 @@ import { rmCommand } from "./commands/rm.js";
 const program = new Command();
 
 program
-  .name("sandbox")
-  .description("Manage AI agent sandbox containers")
+  .name("casita")
+  .description("Casita — a little home for your ai agent")
   .version("0.1.0");
 
 program
   .command("run")
-  .description("Start or resume a sandbox")
-  .argument("[name]", "Sandbox name (auto-generated if omitted)")
+  .description("Start or resume a casita")
+  .argument("[name]", "Casita name (auto-generated if omitted)")
   .option("-p, --port <port>", "Host port for noVNC (Docker auto-assigns if omitted)")
-  .option("-i, --image <image>", "Docker image name", "agent-sandbox")
+  .option("-i, --image <image>", "Docker image name", "casita")
   .action(async (name, options) => {
     // Extract args after "--" from process.argv
     const dashDash = process.argv.indexOf("--");
@@ -27,20 +27,20 @@ program
 
 program
   .command("list")
-  .description("List sandboxes")
-  .option("--running", "Show only running sandboxes")
+  .description("List casitas")
+  .option("--running", "Show only running casitas")
   .action(listCommand);
 
 program
   .command("browser")
   .description("Open noVNC in default browser")
-  .argument("[name]", "Sandbox name (inferred if only one running)")
+  .argument("[name]", "Casita name (inferred if only one running)")
   .action(browserCommand);
 
 program
   .command("rm")
-  .description("Remove a sandbox")
-  .argument("<name>", "Sandbox name to remove")
+  .description("Remove a casita")
+  .argument("<name>", "Casita name to remove")
   .option("-f, --force", "Skip confirmation prompt")
   .option("--clean", "Also delete the home directory on disk")
   .action(rmCommand);

@@ -8,3 +8,5 @@
 - support audio in vnc viewer
 
 - auto connect to vnc when loading the page
+
+- add "file" command to container

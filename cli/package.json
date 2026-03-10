@@ -1,10 +1,10 @@
 {
-  "name": "agent-sandbox",
+  "name": "casita",
   "version": "0.1.0",
-  "description": "CLI for managing AI agent sandbox containers",
+  "description": "Casita — a little home for your ai agent",
   "type": "module",
   "bin": {
-    "sandbox": "./dist/index.js"
+    "casita": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",

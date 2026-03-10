@@ -2,11 +2,11 @@ import { execa } from "execa";
 import path from "node:path";
 import fs from "node:fs";
 
-export const LABEL_PREFIX = "sandbox";
-export const CONTAINER_PREFIX = "agent-sandbox";
-export const SANDBOXES_DIR = ".sandboxes";
+export const LABEL_PREFIX = "casita";
+export const CONTAINER_PREFIX = "casita";
+export const CASITAS_DIR = ".casitas";
 
-export interface SandboxInfo {
+export interface CasitaInfo {
   name: string;
   containerId: string;
   port: string;
@@ -15,13 +15,13 @@ export interface SandboxInfo {
 }
 
 /**
- * Traverse parent directories from `startDir` looking for a `.sandboxes/` directory.
- * Returns the directory containing `.sandboxes/`, or null if none found.
+ * Traverse parent directories from `startDir` looking for a `.casitas/` directory.
+ * Returns the directory containing `.casitas/`, or null if none found.
  */
 export function findWorkspaceRoot(startDir: string = process.cwd()): string | null {
   let dir = path.resolve(startDir);
   while (true) {
-    if (fs.existsSync(path.join(dir, SANDBOXES_DIR))) {
+    if (fs.existsSync(path.join(dir, CASITAS_DIR))) {
       return dir;
     }
     const parent = path.dirname(dir);
@@ -32,7 +32,7 @@ export function findWorkspaceRoot(startDir: string = process.cwd()): string | nu
 }
 
 /**
- * Get or create the workspace root. Finds existing `.sandboxes/` dir by traversing up,
+ * Get or create the workspace root. Finds existing `.casitas/` dir by traversing up,
  * or creates one in the current directory.
  */
 export function getWorkspaceRoot(startDir: string = process.cwd()): string {
@@ -40,17 +40,17 @@ export function getWorkspaceRoot(startDir: string = process.cwd()): string {
 }
 
 /**
- * Get the sandboxes data directory for a workspace.
+ * Get the casitas data directory for a workspace.
  */
-export function getSandboxesDir(workspaceRoot: string): string {
-  return path.join(workspaceRoot, SANDBOXES_DIR);
+export function getCasitasDir(workspaceRoot: string): string {
+  return path.join(workspaceRoot, CASITAS_DIR);
 }
 
 /**
- * Find sandbox names registered in this workspace's `.sandboxes/` directory.
+ * Find casita names registered in this workspace's `.casitas/` directory.
  */
-function getLocalSandboxNames(workspaceRoot: string): string[] {
-  const dir = getSandboxesDir(workspaceRoot);
+function getLocalCasitaNames(workspaceRoot: string): string[] {
+  const dir = getCasitasDir(workspaceRoot);
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir, { withFileTypes: true })
     .filter((d) => d.isDirectory())
@@ -66,7 +66,7 @@ export async function getHostPort(container: string, containerPort: number): Pro
   return match[1];
 }
 
-export async function listSandboxes(): Promise<SandboxInfo[]> {
+export async function listCasitas(): Promise<CasitaInfo[]> {
   const { stdout } = await execa("docker", [
     "ps", "-a",
     "--filter", `label=${LABEL_PREFIX}.name`,
@@ -98,27 +98,27 @@ export async function listSandboxes(): Promise<SandboxInfo[]> {
 }
 
 /**
- * Find a sandbox for the current workspace by checking which sandbox names
- * exist in the local `.sandboxes/` directory and matching against Docker containers.
+ * Find a casita for the current workspace by checking which casita names
+ * exist in the local `.casitas/` directory and matching against Docker containers.
  */
-export async function findSandboxForWorkspace(workspaceRoot: string): Promise<SandboxInfo | null> {
-  const localNames = getLocalSandboxNames(workspaceRoot);
+export async function findCasitaForWorkspace(workspaceRoot: string): Promise<CasitaInfo | null> {
+  const localNames = getLocalCasitaNames(workspaceRoot);
   if (localNames.length === 0) return null;
 
-  const allSandboxes = await listSandboxes();
+  const allCasitas = await listCasitas();
   for (const name of localNames) {
-    const match = allSandboxes.find((s) => s.name === name);
+    const match = allCasitas.find((s) => s.name === name);
     if (match) return match;
   }
   return null;
 }
 
-export async function findSandboxByName(name: string): Promise<SandboxInfo | null> {
-  const sandboxes = await listSandboxes();
-  return sandboxes.find((s) => s.name === name) || null;
+export async function findCasitaByName(name: string): Promise<CasitaInfo | null> {
+  const casitas = await listCasitas();
+  return casitas.find((s) => s.name === name) || null;
 }
 
-export async function removeSandbox(containerId: string): Promise<void> {
+export async function removeCasita(containerId: string): Promise<void> {
   await execa("docker", ["rm", "-f", containerId]);
 }
 
