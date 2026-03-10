@@ -19,7 +19,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Process manager — runs Xvfb, VNC, and other background services
     supervisor \
     # Core utilities — networking, version control, privilege escalation, process inspection
-    curl git sudo procps xdg-utils ca-certificates \
+    curl wget git sudo procps xdg-utils ca-certificates \
+    # CLI essentials — file identification, JSON processing, search, archives, paging
+    file jq ripgrep tree less unzip zip make openssh-client sqlite3 \
     # Python runtime
     python3 python3-pip python3-venv \
     # PDF tools — CLI utilities for splitting, merging, converting, and inspecting PDFs
