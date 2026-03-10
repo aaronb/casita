@@ -10,3 +10,5 @@
 - auto connect to vnc when loading the page
 
 - add "file" command to container
+
+- handle exit codes from claude process
