@@ -56,8 +56,10 @@ ENV PATH="/home/claude/.local/bin:${PATH}"
 # Pre-cache Playwright MCP, then install Chromium using its bundled playwright
 # (must use the same playwright version MCP depends on, or it won't find the browser)
 RUN npx -y @playwright/mcp@latest --help || true
-RUN PLAYWRIGHT_CLI=$(find ~/.npm/_npx -path "*/playwright/cli.js" | head -1) && \
-    node "$PLAYWRIGHT_CLI" install --with-deps chromium
+RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
+      PLAYWRIGHT_CLI=$(find ~/.npm/_npx -path "*/playwright/cli.js" | head -1) && \
+      node "$PLAYWRIGHT_CLI" install --with-deps chromium; \
+    fi
 
 # MCP configuration — user-scope Playwright MCP server (stored in ~/.claude.json)
 # "--no-sandbox disables Chromium's security sandbox, required when running inside Docker where namespace/setuid sandboxing is unavailable",

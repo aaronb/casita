@@ -1,0 +1,48 @@
+name: Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: casita.dockerfile
+          load: true
+          tags: casita:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test — tools exist
+        run: |
+          docker run --rm casita:ci bash -c '
+            set -e
+            node --version
+            python3 --version
+            git --version
+            jq --version
+            rg --version
+          '
+
+      - name: Smoke test — entrypoint & services
+        run: |
+          docker run -d --name casita-smoke casita:ci sleep infinity
+          # Give supervisord time to start services
+          sleep 5
+          docker exec casita-smoke pgrep -x Xvfb
+          docker exec casita-smoke test -f /home/claude/.initialized
+          docker stop casita-smoke
+          docker rm casita-smoke
