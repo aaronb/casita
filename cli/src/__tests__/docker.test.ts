@@ -44,12 +44,10 @@ describe("getHostPort", () => {
 
 describe("listCasitas", () => {
   it("returns parsed CasitaInfo array", async () => {
-    const psLine = JSON.stringify({ ID: "abc123", State: "running", Status: "Up 2 hours" });
+    const psLine = JSON.stringify({ ID: "abc123", State: "running", Status: "Up 2 hours", Labels: "casita.name=swift-fox" });
     mockExeca
       // docker ps
       .mockResolvedValueOnce({ stdout: psLine } as any)
-      // docker inspect (labels)
-      .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": "swift-fox" }) } as any)
       // docker port
       .mockResolvedValueOnce({ stdout: "0.0.0.0:32768\n" } as any);
 
@@ -71,10 +69,9 @@ describe("listCasitas", () => {
   });
 
   it("sets port to '--' for exited containers", async () => {
-    const psLine = JSON.stringify({ ID: "def456", State: "exited", Status: "Exited (0)" });
+    const psLine = JSON.stringify({ ID: "def456", State: "exited", Status: "Exited (0)", Labels: "casita.name=calm-owl" });
     mockExeca
-      .mockResolvedValueOnce({ stdout: psLine } as any)
-      .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": "calm-owl" }) } as any);
+      .mockResolvedValueOnce({ stdout: psLine } as any);
 
     const result = await listCasitas();
     expect(result[0].port).toBe("--");
@@ -84,10 +81,9 @@ describe("listCasitas", () => {
 
 describe("findCasitaByName", () => {
   it("returns matching casita", async () => {
-    const psLine = JSON.stringify({ ID: "abc123", State: "running", Status: "Up" });
+    const psLine = JSON.stringify({ ID: "abc123", State: "running", Status: "Up", Labels: "casita.name=swift-fox" });
     mockExeca
       .mockResolvedValueOnce({ stdout: psLine } as any)
-      .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": "swift-fox" }) } as any)
       .mockResolvedValueOnce({ stdout: "0.0.0.0:8080\n" } as any);
 
     const result = await findCasitaByName("swift-fox");

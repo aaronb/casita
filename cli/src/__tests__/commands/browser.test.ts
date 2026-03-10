@@ -11,10 +11,9 @@ const mockExeca = vi.mocked(execa);
 const mockOpen = vi.mocked(open);
 
 function mockRunningCasita(name: string, port: string, id = "abc123") {
-  const line = JSON.stringify({ ID: id, State: "running", Status: "Up" });
+  const line = JSON.stringify({ ID: id, State: "running", Status: "Up", Labels: `casita.name=${name}` });
   mockExeca
     .mockResolvedValueOnce({ stdout: line } as any)
-    .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": name }) } as any)
     .mockResolvedValueOnce({ stdout: `0.0.0.0:${port}\n` } as any);
 }
 
@@ -52,14 +51,11 @@ describe("browserCommand", () => {
   });
 
   it("errors when multiple casitas and no name specified", async () => {
-    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up" });
-    const line2 = JSON.stringify({ ID: "b2", State: "running", Status: "Up" });
+    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up", Labels: "casita.name=swift-fox" });
+    const line2 = JSON.stringify({ ID: "b2", State: "running", Status: "Up", Labels: "casita.name=calm-owl" });
     mockExeca
       .mockResolvedValueOnce({ stdout: `${line1}\n${line2}` } as any)
-      // inspects first (Promise.all)
-      .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": "swift-fox" }) } as any)
-      .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": "calm-owl" }) } as any)
-      // then ports
+      // ports (Promise.all)
       .mockResolvedValueOnce({ stdout: "0.0.0.0:1111\n" } as any)
       .mockResolvedValueOnce({ stdout: "0.0.0.0:2222\n" } as any);
 

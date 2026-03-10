@@ -68,7 +68,7 @@ d['hasCompletedOnboarding'] = True
 d['numStartups'] = d.get('numStartups', 0) + 1
 with open(sys.argv[1], 'w') as f:
     json.dump(d, f, indent=2)
-" "$HOME/.claude.json"
+" "$HOME/.claude.json" || echo "Warning: could not update onboarding flag"
         fi
     fi
 fi

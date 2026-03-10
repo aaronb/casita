@@ -21,15 +21,11 @@ describe("listCommand", () => {
   });
 
   it("prints table with headers and rows", async () => {
-    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up 1 hour" });
-    const line2 = JSON.stringify({ ID: "b2", State: "exited", Status: "Exited (0)" });
+    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up 1 hour", Labels: "casita.name=swift-fox" });
+    const line2 = JSON.stringify({ ID: "b2", State: "exited", Status: "Exited (0)", Labels: "casita.name=calm-owl" });
     mockExeca
       // docker ps
       .mockResolvedValueOnce({ stdout: `${line1}\n${line2}` } as any)
-      // inspect a1 (Promise.all: both inspects before ports)
-      .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": "swift-fox" }) } as any)
-      // inspect b2
-      .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": "calm-owl" }) } as any)
       // port a1
       .mockResolvedValueOnce({ stdout: "0.0.0.0:32768\n" } as any);
 
@@ -45,14 +41,11 @@ describe("listCommand", () => {
   });
 
   it("filters to running containers with running option", async () => {
-    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up" });
-    const line2 = JSON.stringify({ ID: "b2", State: "exited", Status: "Exited" });
+    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up", Labels: "casita.name=swift-fox" });
+    const line2 = JSON.stringify({ ID: "b2", State: "exited", Status: "Exited", Labels: "casita.name=calm-owl" });
     mockExeca
       .mockResolvedValueOnce({ stdout: `${line1}\n${line2}` } as any)
-      // inspects first (Promise.all)
-      .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": "swift-fox" }) } as any)
-      .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": "calm-owl" }) } as any)
-      // then port for running container
+      // port for running container
       .mockResolvedValueOnce({ stdout: "0.0.0.0:32768\n" } as any);
 
     await listCommand({ running: true });

@@ -70,7 +70,7 @@ export async function listCasitas(): Promise<CasitaInfo[]> {
   const { stdout } = await execa("docker", [
     "ps", "-a",
     "--filter", `label=${LABEL_PREFIX}.name`,
-    "--format", "{{json .}}",
+    "--format", `{{json .}}`,
   ]);
 
   if (!stdout.trim()) return [];
@@ -78,16 +78,18 @@ export async function listCasitas(): Promise<CasitaInfo[]> {
   return Promise.all(
     stdout.trim().split("\n").map(async (line) => {
       const container = JSON.parse(line);
-      const labels = await getContainerLabels(container.ID);
+      const name = parseLabelFromPs(container.Labels, `${LABEL_PREFIX}.name`) || "unknown";
       const isRunning = (container.State || "").toLowerCase() === "running";
       let port = "--";
       if (isRunning) {
         try {
           port = await getHostPort(container.ID, 6080);
-        } catch {}
+        } catch (err) {
+          console.error(`Warning: could not determine port for ${name}: ${err}`);
+        }
       }
       return {
-        name: labels[`${LABEL_PREFIX}.name`] || "unknown",
+        name,
         containerId: container.ID,
         port,
         status: container.Status || container.State || "unknown",
@@ -122,11 +124,17 @@ export async function removeCasita(containerId: string): Promise<void> {
   await execa("docker", ["rm", "-f", containerId]);
 }
 
-async function getContainerLabels(containerId: string): Promise<Record<string, string>> {
-  const { stdout } = await execa("docker", [
-    "inspect",
-    "--format", "{{json .Config.Labels}}",
-    containerId,
-  ]);
-  return JSON.parse(stdout);
+/**
+ * Parse a label value from the comma-separated Labels field in `docker ps` output.
+ * Format: "key1=val1,key2=val2,..."
+ */
+function parseLabelFromPs(labels: string, key: string): string | null {
+  if (!labels) return null;
+  for (const part of labels.split(",")) {
+    const eq = part.indexOf("=");
+    if (eq !== -1 && part.slice(0, eq) === key) {
+      return part.slice(eq + 1);
+    }
+  }
+  return null;
 }

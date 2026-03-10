@@ -10,10 +10,9 @@ import { rmCommand } from "../../commands/rm.js";
 const mockExeca = vi.mocked(execa);
 
 function mockCasitaLookup(name: string, id = "abc123") {
-  const line = JSON.stringify({ ID: id, State: "running", Status: "Up" });
+  const line = JSON.stringify({ ID: id, State: "running", Status: "Up", Labels: `casita.name=${name}` });
   mockExeca
     .mockResolvedValueOnce({ stdout: line } as any)
-    .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": name }) } as any)
     .mockResolvedValueOnce({ stdout: "0.0.0.0:8080\n" } as any);
 }
 

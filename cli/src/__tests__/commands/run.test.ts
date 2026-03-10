@@ -15,12 +15,9 @@ function mockNoExistingCasita() {
 }
 
 function mockExistingCasita(name: string, state: "running" | "exited", id = "abc123") {
-  // findCasitaForWorkspace reads local dir, findCasitaByName calls listCasitas
-  // For simplicity, we mock at the fs level for workspace lookup and execa for docker
-  const line = JSON.stringify({ ID: id, State: state, Status: state === "running" ? "Up" : "Exited" });
+  const line = JSON.stringify({ ID: id, State: state, Status: state === "running" ? "Up" : "Exited", Labels: `casita.name=${name}` });
   mockExeca
-    .mockResolvedValueOnce({ stdout: line } as any)
-    .mockResolvedValueOnce({ stdout: JSON.stringify({ "casita.name": name }) } as any);
+    .mockResolvedValueOnce({ stdout: line } as any);
   if (state === "running") {
     mockExeca.mockResolvedValueOnce({ stdout: "0.0.0.0:8080\n" } as any);
   }
@@ -116,7 +113,7 @@ describe("runCommand", () => {
     const runCall = mockExeca.mock.calls.find((c) => c[1]?.[0] === "run");
     expect(runCall).toBeDefined();
     const args = runCall![1] as string[];
-    expect(args).toContain("9090:6080");
+    expect(args).toContain("127.0.0.1:9090:6080");
     expect(args).toContain("my-image");
     expect(args).toContain("casita-my-casita");
   });

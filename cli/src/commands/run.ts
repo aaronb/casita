@@ -8,6 +8,7 @@ import {
   LABEL_PREFIX,
   findCasitaByName,
   findCasitaForWorkspace,
+  listCasitas,
   getWorkspaceRoot,
   getCasitasDir,
 } from "../docker.js";
@@ -73,7 +74,7 @@ export async function runCommand(name: string | undefined, claudeArgs: string[],
 
   const sharedConfigDir = getSharedConfigDir();
 
-  const portMapping = options.port ? `${options.port}:6080` : "6080";
+  const portMapping = options.port ? `127.0.0.1:${options.port}:6080` : "127.0.0.1::6080";
 
   console.log(`Casita: ${casitaName} (new)`);
   console.log(`Workspace: ${workspaceRoot}`);
@@ -97,10 +98,11 @@ export async function runCommand(name: string | undefined, claudeArgs: string[],
 }
 
 async function generateUniqueName(): Promise<string> {
+  const casitas = await listCasitas();
+  const usedNames = new Set(casitas.map((c) => c.name));
   for (let i = 0; i < 10; i++) {
     const candidate = generateName();
-    const existing = await findCasitaByName(candidate);
-    if (!existing) return candidate;
+    if (!usedNames.has(candidate)) return candidate;
   }
   // Fallback: use timestamp suffix
   return `${generateName()}-${Date.now()}`;
