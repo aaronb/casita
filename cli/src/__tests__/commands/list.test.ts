@@ -21,13 +21,10 @@ describe("listCommand", () => {
   });
 
   it("prints table with headers and rows", async () => {
-    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up 1 hour", Labels: "casita.name=swift-fox" });
+    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up 1 hour", Labels: "casita.name=swift-fox", Ports: "127.0.0.1:32768->6080/tcp" });
     const line2 = JSON.stringify({ ID: "b2", State: "exited", Status: "Exited (0)", Labels: "casita.name=calm-owl" });
     mockExeca
-      // docker ps
-      .mockResolvedValueOnce({ stdout: `${line1}\n${line2}` } as any)
-      // port a1
-      .mockResolvedValueOnce({ stdout: "0.0.0.0:32768\n" } as any);
+      .mockResolvedValueOnce({ stdout: `${line1}\n${line2}` } as any);
 
     await listCommand({});
 
@@ -41,12 +38,10 @@ describe("listCommand", () => {
   });
 
   it("filters to running containers with running option", async () => {
-    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up", Labels: "casita.name=swift-fox" });
+    const line1 = JSON.stringify({ ID: "a1", State: "running", Status: "Up", Labels: "casita.name=swift-fox", Ports: "127.0.0.1:32768->6080/tcp" });
     const line2 = JSON.stringify({ ID: "b2", State: "exited", Status: "Exited", Labels: "casita.name=calm-owl" });
     mockExeca
-      .mockResolvedValueOnce({ stdout: `${line1}\n${line2}` } as any)
-      // port for running container
-      .mockResolvedValueOnce({ stdout: "0.0.0.0:32768\n" } as any);
+      .mockResolvedValueOnce({ stdout: `${line1}\n${line2}` } as any);
 
     await listCommand({ running: true });
 

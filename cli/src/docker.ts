@@ -66,6 +66,23 @@ export async function getHostPort(container: string, containerPort: number): Pro
   return match[1];
 }
 
+/**
+ * Parse the host port for a given container port from the Ports field of `docker ps` output.
+ * Format examples: "0.0.0.0:32768->6080/tcp", "127.0.0.1:8080->6080/tcp, :::32768->6080/tcp"
+ */
+function parsePortFromPs(ports: string, containerPort: number): string {
+  if (!ports) return "--";
+  const portStr = String(containerPort);
+  for (const segment of ports.split(",")) {
+    const trimmed = segment.trim();
+    if (trimmed.includes(`->${portStr}/`)) {
+      const match = trimmed.match(/:(\d+)->/);
+      if (match) return match[1];
+    }
+  }
+  return "--";
+}
+
 export async function listCasitas(): Promise<CasitaInfo[]> {
   const { stdout } = await execa("docker", [
     "ps", "-a",
@@ -75,28 +92,19 @@ export async function listCasitas(): Promise<CasitaInfo[]> {
 
   if (!stdout.trim()) return [];
 
-  return Promise.all(
-    stdout.trim().split("\n").map(async (line) => {
-      const container = JSON.parse(line);
-      const name = parseLabelFromPs(container.Labels, `${LABEL_PREFIX}.name`) || "unknown";
-      const isRunning = (container.State || "").toLowerCase() === "running";
-      let port = "--";
-      if (isRunning) {
-        try {
-          port = await getHostPort(container.ID, 6080);
-        } catch (err) {
-          console.error(`Warning: could not determine port for ${name}: ${err}`);
-        }
-      }
-      return {
-        name,
-        containerId: container.ID,
-        port,
-        status: container.Status || container.State || "unknown",
-        state: isRunning ? "running" as const : "exited" as const,
-      };
-    })
-  );
+  return stdout.trim().split("\n").map((line) => {
+    const container = JSON.parse(line);
+    const name = parseLabelFromPs(container.Labels, `${LABEL_PREFIX}.name`) || "unknown";
+    const isRunning = (container.State || "").toLowerCase() === "running";
+    const port = isRunning ? parsePortFromPs(container.Ports, 6080) : "--";
+    return {
+      name,
+      containerId: container.ID,
+      port,
+      status: container.Status || container.State || "unknown",
+      state: isRunning ? "running" as const : "exited" as const,
+    };
+  });
 }
 
 /**

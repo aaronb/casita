@@ -30,6 +30,15 @@ export async function rmCommand(name: string, options: RmOptions) {
     const workspaceRoot = getWorkspaceRoot();
     const casitaDir = path.join(getCasitasDir(workspaceRoot), name);
     if (fs.existsSync(casitaDir)) {
+      if (!options.force) {
+        const cleanConfirmed = await confirm(
+          `This will permanently delete all casita data (home directory, credentials, history) at:\n  ${casitaDir}\nProceed?`
+        );
+        if (!cleanConfirmed) {
+          console.log("Skipped data cleanup.");
+          return;
+        }
+      }
       fs.rmSync(casitaDir, { recursive: true, force: true });
       console.log(`Cleaned casita data: ${casitaDir}`);
     }

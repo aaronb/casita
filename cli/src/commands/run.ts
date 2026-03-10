@@ -25,7 +25,17 @@ function getSharedConfigDir(): string {
   return dir;
 }
 
+const VALID_NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
+
+function validateName(name: string): void {
+  if (!VALID_NAME_RE.test(name) || name.length > 64) {
+    console.error(`Invalid casita name "${name}". Names must match /^[a-z0-9][a-z0-9-]*$/ and be at most 64 characters.`);
+    process.exit(1);
+  }
+}
+
 export async function runCommand(name: string | undefined, claudeArgs: string[], options: RunOptions) {
+  if (name) validateName(name);
   const workspaceRoot = getWorkspaceRoot();
 
   // Look up existing casita

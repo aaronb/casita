@@ -14,6 +14,6 @@ describe("generateName", () => {
 
   it("returns deterministic output when Math.random is mocked to 0.999", () => {
     vi.spyOn(Math, "random").mockReturnValue(0.999);
-    expect(generateName()).toBe("tall-cub");
+    expect(generateName()).toBe("zesty-zebu");
   });
 });

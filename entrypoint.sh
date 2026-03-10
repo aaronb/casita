@@ -18,7 +18,6 @@ cleanup() {
     fi
     echo "Shutting down services..."
     supervisorctl -c /etc/supervisor/conf.d/supervisord.conf shutdown 2>/dev/null || true
-    kill $(jobs -p) 2>/dev/null
     exit 0
 }
 
