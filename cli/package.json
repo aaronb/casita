@@ -22,7 +22,7 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
+    "typescript": "^6.0.2",
     "tsx": "^4.19.0",
     "@types/node": "^22.0.0",
     "vitest": "^3.0.0"
